@@ -31,6 +31,8 @@ public unsafe class LZ4HighChainEncoder: LZ4EncoderBase
             fixed (byte* dictPtr = dictionary)
             {
                 var actual = PrepareInputBufferWithDict(dictPtr, dictionary.Length);
+                // LZ4_loadDictHC initialises the stream internally, so LZ4_initStreamHC
+                // is intentionally skipped here (per the LZ4 HC streaming API contract).
                 LL.LZ4_loadDictHC(Context, InputBuffer, actual);
                 LL.LZ4_setCompressionLevel(Context, (int)level);
             }

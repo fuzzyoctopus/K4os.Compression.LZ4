@@ -66,7 +66,14 @@ public partial class LZ4FrameReader<TStreamReader, TStreamState>:
     {
         var decoder = _decoderFactory(descriptor);
         if (_dictionary is { Bytes.Length: > 0 })
+        {
+            if (_dictionary.DictionaryId.HasValue && descriptor.Dictionary.HasValue &&
+                _dictionary.DictionaryId.Value != descriptor.Dictionary.Value)
+                throw new InvalidDataException(
+                    $"Frame dictionary ID 0x{descriptor.Dictionary.Value:X8} does not match " +
+                    $"provided dictionary ID 0x{_dictionary.DictionaryId.Value:X8}");
             decoder.Inject(_dictionary.Bytes, 0, _dictionary.Bytes.Length);
+        }
         return decoder;
     }
 
