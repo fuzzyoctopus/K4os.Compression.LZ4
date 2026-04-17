@@ -48,7 +48,8 @@ public static class Extensions
             descriptor.Chaining,
             settings.CompressionLevel,
             descriptor.BlockSize,
-            ExtraBlocks(descriptor.BlockSize, settings.ExtraMemory));
+            ExtraBlocks(descriptor.BlockSize, settings.ExtraMemory),
+            settings.DictionaryData?.Bytes);
 
     /// <summary>
     /// Create <see cref="ILZ4Decoder"/> using <see cref="ILZ4Descriptor"/>.

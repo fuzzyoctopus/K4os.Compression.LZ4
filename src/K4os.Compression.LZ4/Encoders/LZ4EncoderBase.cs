@@ -18,7 +18,7 @@ public abstract unsafe class LZ4EncoderBase: UnmanagedResources, ILZ4Encoder
 	private int _inputIndex;
 	private int _inputPointer;
 	
-	private byte* InputBuffer => _inputBufferPin.Pointer;
+	protected byte* InputBuffer => _inputBufferPin.Pointer;
 
 	/// <summary>Creates new instance of encoder.</summary>
 	/// <param name="chaining">Needs to be <c>true</c> if using dependent blocks.</param>
@@ -96,13 +96,26 @@ public abstract unsafe class LZ4EncoderBase: UnmanagedResources, ILZ4Encoder
 		_inputIndex = _inputPointer = CopyDict(InputBuffer, _inputPointer);
 	}
 
-	/// <summary>Encodes single block using appropriate algorithm.</summary>
-	/// <param name="source">Source buffer.</param>
-	/// <param name="sourceLength">Source buffer length.</param>
-	/// <param name="target">Target buffer.</param>
-	/// <param name="targetLength">Target buffer length.</param>
-	/// <returns>Number of bytes actually written to target buffer.</returns>
-	protected abstract int EncodeBlock(
+    /// <summary>Copies dictionary bytes into the input buffer and advances state past them.</summary>
+    /// <param name="dictBytes">Dictionary bytes.</param>
+    /// <param name="dictSize">Dictionary length (capped at 64KB).</param>
+    /// <returns>Actual number of bytes placed in the input buffer.</returns>
+    protected int PrepareInputBufferWithDict(byte* dictBytes, int dictSize)
+    {
+        if (dictSize <= 0) return 0;
+        if (dictSize > Mem.K64) dictSize = Mem.K64;
+        Mem.Move(InputBuffer, dictBytes, dictSize);
+        _inputIndex = _inputPointer = dictSize;
+        return dictSize;
+    }
+
+    /// <summary>Encodes single block using appropriate algorithm.</summary>
+    /// <param name="source">Source buffer.</param>
+    /// <param name="sourceLength">Source buffer length.</param>
+    /// <param name="target">Target buffer.</param>
+    /// <param name="targetLength">Target buffer length.</param>
+    /// <returns>Number of bytes actually written to target buffer.</returns>
+    protected abstract int EncodeBlock(
 		byte* source, int sourceLength, byte* target, int targetLength);
 
 	/// <summary>Copies current dictionary.</summary>

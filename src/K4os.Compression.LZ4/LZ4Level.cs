@@ -8,8 +8,14 @@ public enum LZ4Level
 	/// <summary>Fast compression.</summary>
 	L00_FAST = 0,
 
-	/// <summary>High compression, level 3.</summary>
-	L03_HC = 3,
+    /// <summary>Fast compression (acceleration=1).</summary>
+    L01_FAST = 1,
+
+    /// <summary>Fast compression (acceleration=2), tuned variant between L01 and L03_HC.</summary>
+    L02_FAST = 2,
+
+    /// <summary>High compression, level 3.</summary>
+    L03_HC = 3,
 
 	/// <summary>High compression, level 4.</summary>
 	L04_HC = 4,

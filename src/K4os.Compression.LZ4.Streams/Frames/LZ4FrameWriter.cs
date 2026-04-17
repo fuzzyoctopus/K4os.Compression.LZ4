@@ -142,8 +142,7 @@ public partial class LZ4FrameWriter<TStreamWriter, TStreamState>:
                 "ContentSize feature is not implemented"); // Stash8(contentSize);
 
         if (hasDictionary)
-            throw NotImplemented(
-                "Predefined dictionaries feature is not implemented"); // Stash4(dictionaryId);
+            _stash.Poke4(_descriptor.Dictionary!.Value);
 
         if (contentChecksum)
             InitializeContentChecksum();

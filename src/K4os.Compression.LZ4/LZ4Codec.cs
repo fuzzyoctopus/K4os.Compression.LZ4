@@ -46,8 +46,8 @@ public static class LZ4Codec
 			return 0;
 
 		var encoded = level < LZ4Level.L03_HC
-			? LLxx.LZ4_compress_fast(source, target, sourceLength, targetLength, 1)
-			: LLxx.LZ4_compress_HC(source, target, sourceLength, targetLength, (int)level);
+            ? LLxx.LZ4_compress_fast(source, target, sourceLength, targetLength, (int)level)
+            : LLxx.LZ4_compress_HC(source, target, sourceLength, targetLength, (int)level);
 		return encoded <= 0 ? -1 : encoded;
 	}
 
@@ -95,13 +95,93 @@ public static class LZ4Codec
 				level);
 	}
 
-	/// <summary>Decompresses data from given buffer.</summary>
-	/// <param name="source">Input buffer.</param>
-	/// <param name="sourceLength">Input buffer length.</param>
-	/// <param name="target">Output buffer.</param>
-	/// <param name="targetLength">Output buffer length.</param>
-	/// <returns>Number of bytes written, or negative value if output buffer is too small.</returns>
-	public static unsafe int Decode(
+    /// <summary>Compresses data from one buffer into another using a dictionary.</summary>
+    /// <param name="source">Input buffer.</param>
+    /// <param name="sourceLength">Length of input buffer.</param>
+    /// <param name="target">Output buffer.</param>
+    /// <param name="targetLength">Output buffer length.</param>
+    /// <param name="dictionary">Dictionary buffer.</param>
+    /// <param name="dictionaryLength">Dictionary buffer length.</param>
+    /// <param name="level">Compression level.</param>
+    /// <returns>Number of bytes written, or negative value if output buffer is too small.</returns>
+    public static unsafe int Encode(
+        byte* source, int sourceLength,
+        byte* target, int targetLength,
+        byte* dictionary, int dictionaryLength,
+        LZ4Level level = LZ4Level.L00_FAST)
+    {
+        if (sourceLength <= 0)
+            return 0;
+
+        var encoded = level < LZ4Level.L03_HC
+            ? LLxx.LZ4_compress_fast_usingDict(
+                source, target, sourceLength, targetLength, (int)level, dictionary, dictionaryLength)
+            : LLxx.LZ4_compress_HC_usingDict(
+                source, target, sourceLength, targetLength, (int)level, dictionary, dictionaryLength);
+        return encoded <= 0 ? -1 : encoded;
+    }
+
+    /// <summary>Compresses data from one buffer into another using a dictionary.</summary>
+    /// <param name="source">Input buffer.</param>
+    /// <param name="target">Output buffer.</param>
+    /// <param name="dictionary">Dictionary buffer.</param>
+    /// <param name="level">Compression level.</param>
+    /// <returns>Number of bytes written, or negative value if output buffer is too small.</returns>
+    public static unsafe int Encode(
+        ReadOnlySpan<byte> source, Span<byte> target, ReadOnlySpan<byte> dictionary,
+        LZ4Level level = LZ4Level.L00_FAST)
+    {
+        var sourceLength = source.Length;
+        if (sourceLength <= 0)
+            return 0;
+
+        var targetLength = target.Length;
+        var dictionaryLength = dictionary.Length;
+        fixed (byte* sourceP = source)
+        fixed (byte* targetP = target)
+        fixed (byte* dictionaryP = dictionary)
+            return Encode(sourceP, sourceLength, targetP, targetLength, dictionaryP, dictionaryLength, level);
+    }
+
+    /// <summary>Compresses data from one buffer into another using a dictionary.</summary>
+    /// <param name="source">Input buffer.</param>
+    /// <param name="sourceOffset">Input buffer offset.</param>
+    /// <param name="sourceLength">Input buffer length.</param>
+    /// <param name="target">Output buffer.</param>
+    /// <param name="targetOffset">Output buffer offset.</param>
+    /// <param name="targetLength">Output buffer length.</param>
+    /// <param name="dictionary">Dictionary buffer.</param>
+    /// <param name="dictionaryOffset">Dictionary buffer offset.</param>
+    /// <param name="dictionaryLength">Dictionary buffer length.</param>
+    /// <param name="level">Compression level.</param>
+    /// <returns>Number of bytes written, or negative value if output buffer is too small.</returns>
+    public static unsafe int Encode(
+        byte[] source, int sourceOffset, int sourceLength,
+        byte[] target, int targetOffset, int targetLength,
+        byte[]? dictionary, int dictionaryOffset, int dictionaryLength,
+        LZ4Level level = LZ4Level.L00_FAST)
+    {
+        source.Validate(sourceOffset, sourceLength);
+        target.Validate(targetOffset, targetLength);
+        dictionary.Validate(dictionaryOffset, dictionaryLength, true);
+
+        fixed (byte* sourceP = source)
+        fixed (byte* targetP = target)
+        fixed (byte* dictionaryP = dictionary)
+            return Encode(
+                sourceP + sourceOffset, sourceLength,
+                targetP + targetOffset, targetLength,
+                dictionaryP + dictionaryOffset, dictionaryLength,
+                level);
+    }
+
+    /// <summary>Decompresses data from given buffer.</summary>
+    /// <param name="source">Input buffer.</param>
+    /// <param name="sourceLength">Input buffer length.</param>
+    /// <param name="target">Output buffer.</param>
+    /// <param name="targetLength">Output buffer length.</param>
+    /// <returns>Number of bytes written, or negative value if output buffer is too small.</returns>
+    public static unsafe int Decode(
 		byte* source, int sourceLength,
 		byte* target, int targetLength)
 	{

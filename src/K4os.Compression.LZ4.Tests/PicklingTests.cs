@@ -70,7 +70,7 @@ namespace K4os.Compression.LZ4.Tests
 			var unpickledWriter = BufferWriter.New();
 
 			Assert.Throws<ArgumentNullException>(
-				() => LZ4Pickler.Pickle(original, null!, level));
+				() => LZ4Pickler.Pickle(original, (IBufferWriter<byte>)null!, level));
 			LZ4Pickler.Pickle(original, pickledWriter, level);
 			var pickled = pickledWriter.WrittenSpan;
 

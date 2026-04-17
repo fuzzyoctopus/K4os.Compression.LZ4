@@ -1,6 +1,9 @@
 ﻿using K4os.Compression.LZ4.Internal;
+using LZ4Dictionary = K4os.Compression.LZ4.LZ4Dictionary;
 
 namespace K4os.Compression.LZ4.Streams;
+
+
 
 /// <summary>
 /// LZ4 encoder settings.
@@ -36,8 +39,11 @@ public class LZ4EncoderSettings
     /// <summary>Indicates if block checksum should be included.</summary>
     public bool BlockChecksum { get; set; } = false;
 
-    /// <summary>Dictionary id. Not implemented yet.</summary>
-    public uint? Dictionary => null;
+    /// <summary>Optional dictionary for compression. The dictionary ID (if any) is written to the frame header.</summary>
+    public LZ4Dictionary? DictionaryData { get; set; } = null;
+
+    /// <summary>Dictionary id written to the frame header, derived from <see cref="DictionaryData"/>.</summary>
+    public uint? Dictionary => DictionaryData?.DictionaryId;
 
     /// <summary>Compression level.</summary>
     public LZ4Level CompressionLevel { get; set; } = LZ4Level.L00_FAST;

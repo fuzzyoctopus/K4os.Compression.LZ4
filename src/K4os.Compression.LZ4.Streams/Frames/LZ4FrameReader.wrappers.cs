@@ -18,9 +18,10 @@ public class ByteSpanLZ4FrameReader:
     /// </summary>
     /// <param name="span">Bytes span.</param>
     /// <param name="decoderFactory">LZ4 decoder factory.</param>
+    /// <param name="dictionary">Optional dictionary to preload into the decoder.</param>
     public ByteSpanLZ4FrameReader(
-        UnsafeByteSpan span, Func<ILZ4Descriptor, ILZ4Decoder> decoderFactory):
-        base(new ByteSpanAdapter(span), 0, decoderFactory) { }
+        UnsafeByteSpan span, Func<ILZ4Descriptor, ILZ4Decoder> decoderFactory, LZ4Dictionary? dictionary = null) :
+        base(new ByteSpanAdapter(span), 0, decoderFactory, dictionary) { }
 }
 
 /// <summary>
@@ -34,9 +35,10 @@ public class ByteMemoryLZ4FrameReader:
     /// </summary>
     /// <param name="memory">Memory buffer.</param>
     /// <param name="decoderFactory">LZ4 decoder factory.</param>
+    /// <param name="dictionary">Optional dictionary to preload into the decoder.</param>
     public ByteMemoryLZ4FrameReader(
-        ReadOnlyMemory<byte> memory, Func<ILZ4Descriptor, ILZ4Decoder> decoderFactory):
-        base(new ByteMemoryReadAdapter(memory), 0, decoderFactory) { }
+        ReadOnlyMemory<byte> memory, Func<ILZ4Descriptor, ILZ4Decoder> decoderFactory, LZ4Dictionary? dictionary = null) :
+        base(new ByteMemoryReadAdapter(memory), 0, decoderFactory, dictionary) { }
 }
 
 /// <summary>
@@ -50,9 +52,10 @@ public class ByteSequenceLZ4FrameReader:
     /// </summary>
     /// <param name="sequence">Byte sequence.</param>
     /// <param name="decoderFactory">LZ4 decoder factory.</param>
+    /// <param name="dictionary">Optional dictionary to preload into the decoder.</param>
     public ByteSequenceLZ4FrameReader(
-        ReadOnlySequence<byte> sequence, Func<ILZ4Descriptor, ILZ4Decoder> decoderFactory):
-        base(new ByteSequenceAdapter(), sequence, decoderFactory) { }
+        ReadOnlySequence<byte> sequence, Func<ILZ4Descriptor, ILZ4Decoder> decoderFactory, LZ4Dictionary? dictionary = null) :
+        base(new ByteSequenceAdapter(), sequence, decoderFactory, dictionary) { }
 }
 
 /// <summary>
@@ -69,9 +72,10 @@ public class StreamLZ4FrameReader: LZ4FrameReader<StreamAdapter, EmptyState>
     /// <param name="stream">Stream to read from.</param>
     /// <param name="leaveOpen">Leave stream open after reader is disposed.</param>
     /// <param name="decoderFactory">LZ4 decoder factory.</param>
+    /// <param name="dictionary">Optional dictionary to preload into the decoder.</param>
     public StreamLZ4FrameReader(
-        Stream stream, bool leaveOpen, Func<ILZ4Descriptor, ILZ4Decoder> decoderFactory):
-        base(new StreamAdapter(stream), default, decoderFactory)
+        Stream stream, bool leaveOpen, Func<ILZ4Descriptor, ILZ4Decoder> decoderFactory, LZ4Dictionary? dictionary = null) :
+        base(new StreamAdapter(stream), default, decoderFactory, dictionary)
     {
         _stream = stream;
         _leaveOpen = leaveOpen;
@@ -116,9 +120,10 @@ public class PipeLZ4FrameReader: LZ4FrameReader<PipeReaderAdapter, EmptyState>
     /// <param name="pipe">Pipe to be read.</param>
     /// <param name="leaveOpen">Leave pipe open after reader is disposed.</param>
     /// <param name="decoderFactory">LZ4 decoder factory.</param>
+    /// <param name="dictionary">Optional dictionary to preload into the decoder.</param>
     public PipeLZ4FrameReader(
-        PipeReader pipe, bool leaveOpen, Func<ILZ4Descriptor, ILZ4Decoder> decoderFactory):
-        base(new PipeReaderAdapter(pipe), default, decoderFactory)
+        PipeReader pipe, bool leaveOpen, Func<ILZ4Descriptor, ILZ4Decoder> decoderFactory, LZ4Dictionary? dictionary = null) :
+        base(new PipeReaderAdapter(pipe), default, decoderFactory, dictionary)
     {
         _pipe = pipe;
         _leaveOpen = leaveOpen;

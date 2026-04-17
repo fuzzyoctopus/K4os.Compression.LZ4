@@ -19,6 +19,7 @@ public partial class LZ4FrameReader<TStreamReader, TStreamState>:
     private Stash _stash = new();
 
     private readonly Func<ILZ4Descriptor, ILZ4Decoder> _decoderFactory;
+    private readonly LZ4Dictionary? _dictionary;
 
     private ILZ4Descriptor? _descriptor;
     private ILZ4Decoder? _decoder;
@@ -34,15 +35,18 @@ public partial class LZ4FrameReader<TStreamReader, TStreamState>:
     /// <param name="reader">Inner stream.</param>
     /// <param name="stream">Inner stream initial state.</param>
     /// <param name="decoderFactory">Decoder factory.</param>
+    /// /// <param name="dictionary">Optional dictionary to preload into the decoder.</param>
     public LZ4FrameReader(
         TStreamReader reader,
         TStreamState stream,
-        Func<ILZ4Descriptor, ILZ4Decoder> decoderFactory)
+        Func<ILZ4Descriptor, ILZ4Decoder> decoderFactory,
+        LZ4Dictionary? dictionary = null)
     {
         _decoderFactory = decoderFactory;
         _reader = reader;
         _stream = stream;
         _bytesRead = 0;
+        _dictionary = dictionary;
     }
 
     /// <summary>
@@ -58,8 +62,13 @@ public partial class LZ4FrameReader<TStreamReader, TStreamState>:
             7 => Mem.M4, 6 => Mem.M1, 5 => Mem.K256, 4 => Mem.K64, _ => Mem.K64,
         };
 
-    private ILZ4Decoder CreateDecoder(ILZ4Descriptor descriptor) =>
-        _decoderFactory(descriptor);
+    private ILZ4Decoder CreateDecoder(ILZ4Descriptor descriptor)
+    {
+        var decoder = _decoderFactory(descriptor);
+        if (_dictionary is { Bytes.Length: > 0 })
+            decoder.Inject(_dictionary.Bytes, 0, _dictionary.Bytes.Length);
+        return decoder;
+    }
 
     /// <inheritdoc />
     public void CloseFrame()

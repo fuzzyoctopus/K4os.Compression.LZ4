@@ -15,19 +15,32 @@ public unsafe class LZ4HighChainEncoder: LZ4EncoderBase
 
 	private LZ4Context* Context => _contextPin.Reference<LZ4Context>();
 
-	/// <summary>Creates new instance of <see cref="LZ4HighChainEncoder"/></summary>
-	/// <param name="level">Compression level.</param>
-	/// <param name="blockSize">Block size.</param>
-	/// <param name="extraBlocks">Number of extra blocks.</param>
-	public LZ4HighChainEncoder(LZ4Level level, int blockSize, int extraBlocks = 0):
-		base(true, blockSize, extraBlocks)
+    /// <summary>Creates new instance of <see cref="LZ4HighChainEncoder"/></summary>
+    /// <param name="level">Compression level.</param>
+    /// <param name="blockSize">Block size.</param>
+    /// <param name="extraBlocks">Number of extra blocks.</param>
+    /// <param name="dictionary">Optional dictionary bytes preloaded into the encoder.</param>
+    public LZ4HighChainEncoder(LZ4Level level, int blockSize, int extraBlocks = 0, byte[]? dictionary = null) :
+        base(true, blockSize, extraBlocks)
 	{
 		if (level < LZ4Level.L03_HC) level = LZ4Level.L03_HC;
 		if (level > LZ4Level.L12_MAX) level = LZ4Level.L12_MAX;
 		PinnedMemory.Alloc<LZ4Context>(out _contextPin, false);
-		LL.LZ4_initStreamHC(Context);
-		LL.LZ4_resetStreamHC_fast(Context, (int) level);
-	}
+        if (dictionary is { Length: > 0 })
+        {
+            fixed (byte* dictPtr = dictionary)
+            {
+                var actual = PrepareInputBufferWithDict(dictPtr, dictionary.Length);
+                LL.LZ4_loadDictHC(Context, InputBuffer, actual);
+                LL.LZ4_setCompressionLevel(Context, (int)level);
+            }
+        }
+        else
+        {
+            LL.LZ4_initStreamHC(Context);
+            LL.LZ4_resetStreamHC_fast(Context, (int)level);
+        }
+    }
 
 	/// <inheritdoc />
 	protected override void ReleaseUnmanaged()

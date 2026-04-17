@@ -104,13 +104,76 @@ public static partial class LZ4Pickler
 			return result;
 		}
 	}
-		
-	/// <summary>Compresses input buffer into self-contained package.</summary>
-	/// <param name="source">Input buffer.</param>
-	/// <param name="writer">Where the compressed data is written.</param>
-	/// <param name="level">Compression level.</param>
-	/// <returns>Output buffer.</returns>
-	public static void Pickle<TBufferWriter>(
+
+    /// <summary>Compresses input buffer into self-contained package using a dictionary.</summary>
+    /// <param name="source">Input buffer.</param>
+    /// <param name="dictionary">Dictionary bytes used for compression.</param>
+    /// <param name="level">Compression level.</param>
+    /// <returns>Output buffer.</returns>
+    public static unsafe byte[] Pickle(
+        ReadOnlySpan<byte> source, ReadOnlySpan<byte> dictionary,
+        LZ4Level level = LZ4Level.L00_FAST)
+    {
+        var sourceLength = source.Length;
+        if (sourceLength == 0) return Mem.Empty;
+
+        if (sourceLength <= MAX_STACKALLOC)
+        {
+            Span<byte> target = stackalloc byte[MAX_STACKALLOC];
+            return PickleWithBuffer(source, dictionary, level, target);
+        }
+        else
+        {
+            PinnedMemory.Alloc(out var target, sourceLength, false);
+            try
+            {
+                return PickleWithBuffer(source, dictionary, level, target.Span);
+            }
+            finally
+            {
+                target.Free();
+            }
+        }
+    }
+
+    private static byte[] PickleWithBuffer(
+        ReadOnlySpan<byte> source, ReadOnlySpan<byte> dictionary, LZ4Level level, Span<byte> buffer)
+    {
+        const int version = 0;
+        var sourceLength = source.Length;
+
+        Debug.Assert(buffer.Length >= sourceLength);
+        var encodedLength = LZ4Codec.Encode(source, buffer, dictionary, level);
+
+        if (encodedLength <= 0 || encodedLength >= sourceLength)
+        {
+            var headerSize = GetUncompressedHeaderSize(version, sourceLength);
+            var result = new byte[headerSize + sourceLength];
+            var target = result.AsSpan();
+            var offset = EncodeUncompressedHeader(target, version, sourceLength);
+            Debug.Assert(headerSize == offset, "Unexpected header size");
+            source.CopyTo(target.Slice(offset));
+            return result;
+        }
+        else
+        {
+            var headerSize = GetCompressedHeaderSize(version, sourceLength, encodedLength);
+            var result = new byte[headerSize + encodedLength];
+            var target = result.AsSpan();
+            var offset = EncodeCompressedHeader(
+                target, version, headerSize, sourceLength, encodedLength);
+            Debug.Assert(headerSize == offset, "Unexpected header size");
+            buffer.Slice(0, encodedLength).CopyTo(target.Slice(offset));
+            return result;
+        }
+    }
+
+    /// <summary>Compresses input buffer into self-contained package.</summary>
+    /// <param name="source">Input buffer.</param>
+    /// <param name="writer">Where the compressed data is written.</param>
+    /// <param name="level">Compression level.</param>
+    /// <returns>Output buffer.</returns>
+    public static void Pickle<TBufferWriter>(
 		ReadOnlySpan<byte> source, TBufferWriter writer,
 		LZ4Level level = LZ4Level.L00_FAST)
 		where TBufferWriter: IBufferWriter<byte>

@@ -45,8 +45,8 @@ public static partial class LZ4Pickler
 		if (size == 0) return Mem.Empty;
 
 		var output = new byte[size];
-		UnpickleCore(header, source, output);
-		return output;
+        UnpickleCore(header, source, output, ReadOnlySpan<byte>.Empty);
+        return output;
 	}
 		
 	/// <summary>Decompresses previously pickled buffer (see: <see cref="LZ4Pickler"/>.</summary>
@@ -64,8 +64,8 @@ public static partial class LZ4Pickler
 		var header = DecodeHeader(source);
 		var size = UnpickledSize(header);
 		var output = writer.GetSpan(size).Slice(0, size);
-		UnpickleCore(header, source, output);
-		writer.Advance(size);
+        UnpickleCore(header, source, output, ReadOnlySpan<byte>.Empty);
+        writer.Advance(size);
 	}
 
 
@@ -103,12 +103,42 @@ public static partial class LZ4Pickler
 		if (sourceLength == 0) return;
 
 		var header = DecodeHeader(source);
-		UnpickleCore(header, source, output);
-	}
+        UnpickleCore(header, source, output, ReadOnlySpan<byte>.Empty);
+    }
+
+    /// <summary>Decompresses a dictionary-compressed pickled buffer.</summary>
+    /// <param name="source">Input buffer.</param>
+    /// <returns>Output buffer.</returns>
+    public static byte[] Unpickle(ReadOnlySpan<byte> source, ReadOnlySpan<byte> dictionary)
+    {
+        if (source.Length == 0) return Mem.Empty;
+
+        var header = DecodeHeader(source);
+        var size = UnpickledSize(header);
+        if (size == 0) return Mem.Empty;
+
+        var output = new byte[size];
+        UnpickleCore(header, source, output, dictionary);
+        return output;
+    }
+
+    /// <summary>Decompresses a dictionary-compressed pickled buffer into a provided output buffer.</summary>
+    /// <param name="source">Input buffer.</param>
+    /// <param name="dictionary">Dictionary bytes used during compression.</param>
+    /// <param name="output">Where the decompressed data is written.</param>
+    public static void Unpickle(ReadOnlySpan<byte> source, ReadOnlySpan<byte> dictionary, Span<byte> output)
+    {
+        var sourceLength = source.Length;
+        if (sourceLength == 0) return;
+
+        var header = DecodeHeader(source);
+        UnpickleCore(header, source, output, dictionary);
+    }
 
 	private static void UnpickleCore(
-		in PickleHeader header, ReadOnlySpan<byte> source, Span<byte> target)
-	{
+        in PickleHeader header, ReadOnlySpan<byte> source, Span<byte> target,
+        ReadOnlySpan<byte> dictionary)
+    {
 		var data = source.Slice(header.DataOffset);
 		var expectedLength = UnpickledSize(header);
 		var targetLength = target.Length;
@@ -122,8 +152,10 @@ public static partial class LZ4Pickler
 			return;
 		}
 
-		var decodedLength = LZ4Codec.Decode(data, target);
-		if (decodedLength != expectedLength)
+        var decodedLength = dictionary.IsEmpty
+            ? LZ4Codec.Decode(data, target)
+            : LZ4Codec.Decode(data, target, dictionary);
+        if (decodedLength != expectedLength)
 			throw CorruptedPickle(
 				$"Expected to decode {expectedLength} bytes but {decodedLength} has been decoded");
 	}

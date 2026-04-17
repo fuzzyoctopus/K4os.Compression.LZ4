@@ -97,9 +97,7 @@ public partial class LZ4FrameReader<TStreamReader, TStreamState>
 
         var blockSize = MaxBlockSize(blockSizeCode);
 
-        if (hasDictionary)
-            throw NotImplemented(
-                "Predefined dictionaries feature is not implemented"); // Peek4(dictionaryId);
+        // hasDictionary means a dict ID was present in the header; dict injection is handled in CreateDecoder
 
         if (contentChecksum)
             InitializeContentChecksum();

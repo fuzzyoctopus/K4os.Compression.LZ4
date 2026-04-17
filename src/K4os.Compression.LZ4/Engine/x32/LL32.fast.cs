@@ -586,7 +586,17 @@ internal unsafe partial class LL64
 		byte* src, byte* dst, int srcSize, int maxOutputSize) =>
 		LZ4_compress_fast(src, dst, srcSize, maxOutputSize, 1);
 
-	public static int LZ4_compress_fast_continue(
+    public static int LZ4_compress_fast_usingDict(
+        byte* source, byte* dest, int inputSize, int maxOutputSize,
+        int acceleration, byte* dictBuffer, int dictSize)
+    {
+        LZ4_stream_t ctx;
+        LZ4_loadDict(&ctx, dictBuffer, dictSize);
+        return LZ4_compress_fast_continue(&ctx, source, dest, inputSize, maxOutputSize, acceleration);
+    }
+
+
+    public static int LZ4_compress_fast_continue(
 		LZ4_stream_t* LZ4_stream,
 		byte* source, byte* dest,
 		int inputSize, int maxOutputSize,

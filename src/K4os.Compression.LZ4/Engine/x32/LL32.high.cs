@@ -1386,5 +1386,22 @@ internal unsafe partial class LL64
 			contextPin.Free();
 		}
 	}
+
+    public static int LZ4_compress_HC_usingDict(
+        byte* src, byte* dst, int srcSize, int dstCapacity, int compressionLevel,
+        byte* dictBuffer, int dictSize)
+    {
+        PinnedMemory.Alloc(out var contextPin, sizeof(LZ4_streamHC_t), false);
+        try
+        {
+            var ctx = contextPin.Reference<LZ4_streamHC_t>();
+            LZ4_loadDictHC(ctx, dictBuffer, dictSize);
+            return LZ4_compress_HC_extStateHC_fastReset(ctx, src, dst, srcSize, dstCapacity, compressionLevel);
+        }
+        finally
+        {
+            contextPin.Free();
+        }
+    }
 }
 

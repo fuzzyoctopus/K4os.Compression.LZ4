@@ -113,4 +113,40 @@ internal static unsafe class LLxx
 				context, source, target, sourceLength, targetLength),
 			_ => throw AlgorithmNotImplemented(nameof(LZ4_compress_HC_continue))
 		};
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public static int LZ4_loadDict(
+        LL.LZ4_stream_t* context, byte* dictionary, int dictSize) =>
+        LL.Algorithm switch
+        {
+            Algorithm.X64 => LL64.LZ4_loadDict(context, dictionary, dictSize),
+            Algorithm.X32 => LL32.LZ4_loadDict(context, dictionary, dictSize),
+            _ => throw AlgorithmNotImplemented(nameof(LZ4_loadDict))
+        };
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public static int LZ4_compress_fast_usingDict(
+        byte* source, byte* dest, int inputSize, int maxOutputSize,
+        int acceleration, byte* dictBuffer, int dictSize) =>
+        LL.Algorithm switch
+        {
+            Algorithm.X64 => LL64.LZ4_compress_fast_usingDict(
+                source, dest, inputSize, maxOutputSize, acceleration, dictBuffer, dictSize),
+            Algorithm.X32 => LL32.LZ4_compress_fast_usingDict(
+                source, dest, inputSize, maxOutputSize, acceleration, dictBuffer, dictSize),
+            _ => throw AlgorithmNotImplemented(nameof(LZ4_compress_fast_usingDict))
+        };
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public static int LZ4_compress_HC_usingDict(
+        byte* src, byte* dst, int srcSize, int dstCapacity, int compressionLevel,
+        byte* dictBuffer, int dictSize) =>
+        LL.Algorithm switch
+        {
+            Algorithm.X64 => LL64.LZ4_compress_HC_usingDict(
+                src, dst, srcSize, dstCapacity, compressionLevel, dictBuffer, dictSize),
+            Algorithm.X32 => LL32.LZ4_compress_HC_usingDict(
+                src, dst, srcSize, dstCapacity, compressionLevel, dictBuffer, dictSize),
+            _ => throw AlgorithmNotImplemented(nameof(LZ4_compress_HC_usingDict))
+        };
 }
