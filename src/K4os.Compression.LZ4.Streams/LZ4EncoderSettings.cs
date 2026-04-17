@@ -1,4 +1,4 @@
-using K4os.Compression.LZ4.Internal;
+﻿using K4os.Compression.LZ4.Internal;
 
 namespace K4os.Compression.LZ4.Streams;
 
@@ -44,4 +44,12 @@ public class LZ4EncoderSettings
 
     /// <summary>Extra memory (for the process, more is usually better).</summary>
     public int ExtraMemory { get; set; }
+
+    /// <summary>
+    /// Maximum degree of parallelism for frame block compression.
+    /// Value <c>null</c> or &lt;= 1 means sequential compression.
+    /// Parallel compression requires <see cref="ChainBlocks"/> set to <c>false</c>.
+    /// </summary>
+    public int? MaxDegreeOfParallelism { get; set; }
 }
+

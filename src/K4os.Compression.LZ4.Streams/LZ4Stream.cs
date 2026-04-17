@@ -17,7 +17,9 @@ public static class LZ4Stream
     {
         settings ??= LZ4EncoderSettings.Default;
         var frameInfo = settings.CreateDescriptor();
-        return new LZ4EncoderStream(stream, frameInfo, i => i.CreateEncoder(settings), leaveOpen);
+        return new LZ4EncoderStream(
+            stream, frameInfo, i => i.CreateEncoder(settings), leaveOpen,
+            settings.MaxDegreeOfParallelism);
     }
 
     /// <summary>Created compression stream on top of inner stream.</summary>

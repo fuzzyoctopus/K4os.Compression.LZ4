@@ -18,14 +18,17 @@ public class LZ4EncoderStream: LZ4StreamOnStreamEssentials
     /// appropriate encoder.</param>
     /// <param name="leaveOpen">Indicates if <paramref name="inner"/> stream should be left
     /// open after disposing.</param>
+    /// <param name="maxDegreeOfParallelism">Maximum degree of block compression parallelism.</param>
     public LZ4EncoderStream(
         Stream inner,
         ILZ4Descriptor descriptor,
         Func<ILZ4Descriptor, ILZ4Encoder> encoderFactory,
-        bool leaveOpen = false):
+        bool leaveOpen = false,
+        int? maxDegreeOfParallelism = null):
         base(inner, leaveOpen)
     {
-        _writer = new StreamLZ4FrameWriter(inner, true, encoderFactory, descriptor);
+        _writer = new StreamLZ4FrameWriter(
+            inner, true, encoderFactory, descriptor, maxDegreeOfParallelism);
     }
 
     /// <inheritdoc />

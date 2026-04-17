@@ -27,7 +27,7 @@ public static partial class LZ4Frame
         var encoder = new ByteBufferLZ4FrameWriter<TBufferWriter>(
             target,
             i => i.CreateEncoder(settings.CompressionLevel, settings.ExtraMemory),
-            settings.CreateDescriptor());
+            settings.CreateDescriptor(), settings.MaxDegreeOfParallelism);
         using (encoder) encoder.CopyFrom(source);
         return encoder.BufferWriter;
     }
@@ -48,7 +48,7 @@ public static partial class LZ4Frame
         var encoder = new ByteBufferLZ4FrameWriter<TBufferWriter>(
             target,
             i => i.CreateEncoder(settings.CompressionLevel, settings.ExtraMemory),
-            settings.CreateDescriptor());
+            settings.CreateDescriptor(), settings.MaxDegreeOfParallelism);
         using (encoder) encoder.WriteManyBytes(source);
         return encoder.BufferWriter;
     }
@@ -98,7 +98,7 @@ public static partial class LZ4Frame
             var encoder = new ByteSpanLZ4FrameWriter(
                 UnsafeByteSpan.Create(stream0, target.Length),
                 i => i.CreateEncoder(settings.CompressionLevel, settings.ExtraMemory),
-                settings.CreateDescriptor());
+                settings.CreateDescriptor(), settings.MaxDegreeOfParallelism);
             using (encoder) encoder.CopyFrom(source);
             return encoder.CompressedLength;
         }
@@ -121,7 +121,7 @@ public static partial class LZ4Frame
             var encoder = new ByteSpanLZ4FrameWriter(
                 UnsafeByteSpan.Create(stream0, target.Length),
                 i => i.CreateEncoder(settings.CompressionLevel, settings.ExtraMemory),
-                settings.CreateDescriptor());
+                settings.CreateDescriptor(), settings.MaxDegreeOfParallelism);
             using (encoder) encoder.WriteManyBytes(source);
             return encoder.CompressedLength;
         }
@@ -144,7 +144,7 @@ public static partial class LZ4Frame
             var encoder = new ByteSpanLZ4FrameWriter(
                 UnsafeByteSpan.Create(stream0, target.Length),
                 i => i.CreateEncoder(settings.CompressionLevel, settings.ExtraMemory),
-                settings.CreateDescriptor());
+                settings.CreateDescriptor(), settings.MaxDegreeOfParallelism);
             using (encoder) source(encoder);
             return encoder.CompressedLength;
         }
@@ -207,7 +207,7 @@ public static partial class LZ4Frame
         return new ByteSpanLZ4FrameWriter(
             UnsafeByteSpan.Create(target, length),
             i => i.CreateEncoder(settings.CompressionLevel, settings.ExtraMemory),
-            settings.CreateDescriptor());
+            settings.CreateDescriptor(), settings.MaxDegreeOfParallelism);
     }
 
     /// <summary>
@@ -240,7 +240,7 @@ public static partial class LZ4Frame
         return new ByteMemoryLZ4FrameWriter(
             target,
             i => i.CreateEncoder(settings.CompressionLevel, settings.ExtraMemory),
-            settings.CreateDescriptor());
+            settings.CreateDescriptor(), settings.MaxDegreeOfParallelism);
     }
 
     /// <summary>
@@ -271,7 +271,7 @@ public static partial class LZ4Frame
         return new ByteBufferLZ4FrameWriter<TBufferWriter>(
             target,
             i => i.CreateEncoder(settings.CompressionLevel, settings.ExtraMemory),
-            settings.CreateDescriptor());
+            settings.CreateDescriptor(), settings.MaxDegreeOfParallelism);
     }
 
     /// <summary>
@@ -302,7 +302,7 @@ public static partial class LZ4Frame
         return new ByteBufferLZ4FrameWriter(
             target,
             i => i.CreateEncoder(settings.CompressionLevel, settings.ExtraMemory),
-            settings.CreateDescriptor());
+            settings.CreateDescriptor(), settings.MaxDegreeOfParallelism);
     }
 
     /// <summary>
@@ -334,7 +334,7 @@ public static partial class LZ4Frame
             target,
             leaveOpen,
             i => i.CreateEncoder(settings.CompressionLevel, settings.ExtraMemory),
-            settings.CreateDescriptor());
+            settings.CreateDescriptor(), settings.MaxDegreeOfParallelism);
     }
 
     /// <summary>
@@ -368,7 +368,7 @@ public static partial class LZ4Frame
             target,
             leaveOpen,
             i => i.CreateEncoder(settings.CompressionLevel, settings.ExtraMemory),
-            settings.CreateDescriptor());
+            settings.CreateDescriptor(), settings.MaxDegreeOfParallelism);
     }
 
     /// <summary>
@@ -385,3 +385,4 @@ public static partial class LZ4Frame
         bool leaveOpen = false) =>
         Encode(target, ToEncoderSettings(level, extraMemory), leaveOpen);
 }
+

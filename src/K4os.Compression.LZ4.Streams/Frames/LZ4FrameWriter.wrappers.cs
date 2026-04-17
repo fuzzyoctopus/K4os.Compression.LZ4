@@ -21,11 +21,18 @@ public class ByteBufferLZ4FrameWriter<TBufferWriter>:
     /// <param name="stream">Buffer writer to write to.</param>
     /// <param name="encoderFactory">Encoder factory.</param>
     /// <param name="descriptor">Frame descriptor.</param>
+    /// <param name="maxDegreeOfParallelism">Maximum degree of block compression parallelism.</param>
     public ByteBufferLZ4FrameWriter(
         TBufferWriter stream,
         Func<ILZ4Descriptor, ILZ4Encoder> encoderFactory,
-        ILZ4Descriptor descriptor):
-        base(new ByteBufferAdapter<TBufferWriter>(), stream, encoderFactory, descriptor) { }
+        ILZ4Descriptor descriptor,
+        int? maxDegreeOfParallelism = null):
+        base(
+            new ByteBufferAdapter<TBufferWriter>(),
+            stream,
+            encoderFactory,
+            descriptor,
+            maxDegreeOfParallelism) { }
 
     /// <summary>Current state of buffer writer.</summary>
     public TBufferWriter BufferWriter => StreamState;
@@ -42,11 +49,13 @@ public class ByteBufferLZ4FrameWriter: ByteBufferLZ4FrameWriter<IBufferWriter<by
     /// <param name="stream">Buffer writer to write to.</param>
     /// <param name="encoderFactory">Encoder factory.</param>
     /// <param name="descriptor">Frame descriptor.</param>
+    /// <param name="maxDegreeOfParallelism">Maximum degree of block compression parallelism.</param>
     public ByteBufferLZ4FrameWriter(
         IBufferWriter<byte> stream,
         Func<ILZ4Descriptor, ILZ4Encoder> encoderFactory,
-        ILZ4Descriptor descriptor):
-        base(stream, encoderFactory, descriptor) { }
+        ILZ4Descriptor descriptor,
+        int? maxDegreeOfParallelism = null):
+        base(stream, encoderFactory, descriptor, maxDegreeOfParallelism) { }
 }
 
 /// <summary>
@@ -60,11 +69,13 @@ public class ByteMemoryLZ4FrameWriter: LZ4FrameWriter<ByteMemoryWriteAdapter, in
     /// <param name="memory">Memory block where data will be written.</param>
     /// <param name="encoderFactory">Encoder factory.</param>
     /// <param name="descriptor">Frame descriptor.</param>
+    /// <param name="maxDegreeOfParallelism">Maximum degree of block compression parallelism.</param>
     public ByteMemoryLZ4FrameWriter(
         Memory<byte> memory,
         Func<ILZ4Descriptor, ILZ4Encoder> encoderFactory,
-        ILZ4Descriptor descriptor): base(
-        new ByteMemoryWriteAdapter(memory), 0, encoderFactory, descriptor) { }
+        ILZ4Descriptor descriptor,
+        int? maxDegreeOfParallelism = null): base(
+        new ByteMemoryWriteAdapter(memory), 0, encoderFactory, descriptor, maxDegreeOfParallelism) { }
 
     /// <summary>Number of bytes written to the memory.</summary>
     public int CompressedLength => StreamState;
@@ -84,11 +95,13 @@ public class ByteSpanLZ4FrameWriter: LZ4FrameWriter<ByteSpanAdapter, int>
     /// <param name="span">Span to write to.</param>
     /// <param name="encoderFactory">Encoder factory.</param>
     /// <param name="descriptor">Frame descriptor.</param>
+    /// <param name="maxDegreeOfParallelism">Maximum degree of block compression parallelism.</param>
     public ByteSpanLZ4FrameWriter(
         UnsafeByteSpan span,
         Func<ILZ4Descriptor, ILZ4Encoder> encoderFactory,
-        ILZ4Descriptor descriptor):
-        base(new ByteSpanAdapter(span), 0, encoderFactory, descriptor) { }
+        ILZ4Descriptor descriptor,
+        int? maxDegreeOfParallelism = null):
+        base(new ByteSpanAdapter(span), 0, encoderFactory, descriptor, maxDegreeOfParallelism) { }
 
     /// <summary>Number of bytes written to the memory.</summary>
     public int CompressedLength => StreamState;
@@ -109,12 +122,19 @@ public class StreamLZ4FrameWriter: LZ4FrameWriter<StreamAdapter, EmptyState>
     /// <param name="leaveOpen">Leave stream open after disposing this writer.</param>
     /// <param name="encoderFactory">Encoder factory.</param>
     /// <param name="descriptor">Frame descriptor.</param>
+    /// <param name="maxDegreeOfParallelism">Maximum degree of block compression parallelism.</param>
     public StreamLZ4FrameWriter(
         Stream stream,
         bool leaveOpen,
         Func<ILZ4Descriptor, ILZ4Encoder> encoderFactory,
-        ILZ4Descriptor descriptor):
-        base(new StreamAdapter(stream), default, encoderFactory, descriptor)
+        ILZ4Descriptor descriptor,
+        int? maxDegreeOfParallelism = null):
+        base(
+            new StreamAdapter(stream),
+            default,
+            encoderFactory,
+            descriptor,
+            maxDegreeOfParallelism)
     {
         _stream = stream;
         _leaveOpen = leaveOpen;
@@ -154,12 +174,19 @@ public class PipeLZ4FrameWriter: LZ4FrameWriter<PipeWriterAdapter, EmptyState>
     /// <param name="leaveOpen">Leave pipe open after disposing this writer.</param>
     /// <param name="encoderFactory">Encoder factory.</param>
     /// <param name="descriptor">Frame descriptor.</param>
+    /// <param name="maxDegreeOfParallelism">Maximum degree of block compression parallelism.</param>
     public PipeLZ4FrameWriter(
         PipeWriter pipe,
         bool leaveOpen,
         Func<ILZ4Descriptor, ILZ4Encoder> encoderFactory,
-        ILZ4Descriptor descriptor):
-        base(new PipeWriterAdapter(pipe), default, encoderFactory, descriptor)
+        ILZ4Descriptor descriptor,
+        int? maxDegreeOfParallelism = null):
+        base(
+            new PipeWriterAdapter(pipe),
+            default,
+            encoderFactory,
+            descriptor,
+            maxDegreeOfParallelism)
     {
         _pipe = pipe;
         _leaveOpen = leaveOpen;

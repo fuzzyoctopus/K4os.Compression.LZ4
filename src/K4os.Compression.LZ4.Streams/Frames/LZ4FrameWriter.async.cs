@@ -38,6 +38,12 @@ public partial class LZ4FrameWriter<TStreamWriter, TStreamState>
         if (_descriptor.ContentChecksum)
             UpdateContentChecksum(buffer.ToSpan());
 
+        if (UseParallelCompression)
+        {
+            await WriteManyBytesParallel(token, buffer).Weave();
+            return;
+        }
+
         var offset = 0;
         var count = buffer.Length;
 
@@ -59,19 +65,22 @@ public partial class LZ4FrameWriter<TStreamWriter, TStreamState>
 
     private async Task CloseFrame(Token token)
     {
-        if (_encoder == null)
+        if (!_frameOpened)
             return;
 
         try
         {
             await WriteFrameTail(token).Weave();
 
-            if (_buffer is not null)
-                ReleaseBuffer(_buffer);
-            _encoder.Dispose();
+            if (_buffer is not null) ReleaseBuffer(_buffer);
+            _encoder?.Dispose();
         }
         finally
         {
+            await StopParallelCompression(token).Weave();
+            DisposeParallelCompression();
+
+            _frameOpened = false;
             _encoder = null;
             _descriptor = null;
             _buffer = null;
@@ -80,6 +89,12 @@ public partial class LZ4FrameWriter<TStreamWriter, TStreamState>
 
     private async Task WriteFrameTail(Token token)
     {
+        if (UseParallelCompression)
+        {
+            await WriteParallelFrameTail(token).Weave();
+            return;
+        }
+
         var block = FlushAndEncode();
         if (block.Ready)
             await WriteBlock(token, block).Weave();

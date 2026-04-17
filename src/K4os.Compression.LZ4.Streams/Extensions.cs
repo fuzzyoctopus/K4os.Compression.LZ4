@@ -1,3 +1,4 @@
+using System;
 using System.Buffers;
 using System.Runtime.CompilerServices;
 using K4os.Compression.LZ4.Encoders;
@@ -80,15 +81,22 @@ public static class Extensions
     /// </summary>
     /// <param name="settings">Settings.</param>
     /// <returns>LZ4 Descriptor.</returns>
-    public static ILZ4Descriptor CreateDescriptor(
-        this LZ4EncoderSettings settings) =>
-        new LZ4Descriptor(
+    public static ILZ4Descriptor CreateDescriptor(this LZ4EncoderSettings settings)
+    {
+        var parallelism = settings.MaxDegreeOfParallelism.GetValueOrDefault();
+        if (parallelism > 1 && settings.ChainBlocks)
+            throw new ArgumentException(
+                "MaxDegreeOfParallelism > 1 requires ChainBlocks = false",
+                nameof(settings));
+
+        return new LZ4Descriptor(
             settings.ContentLength,
             settings.ContentChecksum,
             settings.ChainBlocks,
             settings.BlockChecksum,
             settings.Dictionary,
             settings.BlockSize);
+    }
 
     /// <summary>Async version of <see cref="ILZ4FrameReader.OpenFrame"/>.</summary>
     /// <param name="reader">Decoder.</param>
